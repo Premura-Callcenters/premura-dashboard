@@ -10,7 +10,7 @@ interface Props {
   onClose: () => void;
 }
 
-export default function ReassignModal({ ticket, employees, currentEmployeeId, onConfirm, onClose }: Props) {
+export default function ReassignModal({ ticket, employees, onConfirm, onClose }: Props) {
   const [selectedId, setSelectedId] = useState('');
   const [note, setNote] = useState('');
   const [saving, setSaving] = useState(false);
