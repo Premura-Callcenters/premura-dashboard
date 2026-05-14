@@ -26,13 +26,13 @@ const callCenterNavItems = [
 ];
 
 const ticketNavItems = [
-  { path: '/tickets', label: 'Ticket Board', icon: Ticket, adminOnly: false },
+  { path: '/tickets', label: 'Tickets & Reports', icon: Ticket, adminOnly: false },
   { path: '/employees', label: 'Employees', icon: UserCog, adminOnly: true },
 ];
 
 const DASHBOARDS = [
   { id: 'callcenter', label: 'Call Center', icon: Phone },
-  { id: 'tickets', label: 'Ticket System', icon: ListTodo },
+  { id: 'tickets', label: 'Tickets & Reports', icon: ListTodo },
 ] as const;
 
 type DashboardId = typeof DASHBOARDS[number]['id'];

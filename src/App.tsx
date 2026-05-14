@@ -23,7 +23,7 @@ const viewLabels: Record<string, string> = {
   '/leaderboard': 'Leaderboard',
   '/historical': 'Historical Analysis',
   '/settings': 'Settings',
-  '/tickets': 'Ticket Dashboard',
+  '/tickets': 'Tickets & Reports',
   '/employees': 'Employee Management',
 };
 
