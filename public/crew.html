@@ -1,0 +1,363 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Crew Board</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700&family=Barlow:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+:root{
+  --ground:#F5F4F1; --surface:#FFFFFF; --surface2:#EFEDE8;
+  --ink:#20232A; --ink2:#5B5F68; --line:#DDDAD3;
+  --accent:#D9480F; --accent-ink:#FFFFFF;
+  --blue:#1971C2; --amber:#B0790A; --green:#2B8A3E; --red:#C92A2A;
+  --chip-blue:#E7F1FB; --chip-amber:#FBF2DC; --chip-green:#E5F3E8; --chip-grey:#ECEAE4; --chip-red:#FBE7E7;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --ground:#16181D; --surface:#1F2229; --surface2:#262A32;
+    --ink:#E8E6E1; --ink2:#9BA0A8; --line:#343943;
+    --accent:#F06A24; --accent-ink:#16181D;
+    --blue:#5CA8E8; --amber:#D9A83E; --green:#69B978; --red:#E57373;
+    --chip-blue:#1E3346; --chip-amber:#3A2F17; --chip-green:#1E3324; --chip-grey:#2B2F37; --chip-red:#3E2222;
+  }
+}
+:root[data-theme="dark"]{
+  --ground:#16181D; --surface:#1F2229; --surface2:#262A32;
+  --ink:#E8E6E1; --ink2:#9BA0A8; --line:#343943;
+  --accent:#F06A24; --accent-ink:#16181D;
+  --blue:#5CA8E8; --amber:#D9A83E; --green:#69B978; --red:#E57373;
+  --chip-blue:#1E3346; --chip-amber:#3A2F17; --chip-green:#1E3324; --chip-grey:#2B2F37; --chip-red:#3E2222;
+}
+*{box-sizing:border-box;margin:0}
+html,body{height:100%}
+body{background:var(--ground);color:var(--ink);font:15px/1.5 Barlow,system-ui,sans-serif}
+h1,h2,h3{font-family:"Barlow Condensed","Arial Narrow",sans-serif;text-wrap:balance;line-height:1.15}
+.mono{font-family:"IBM Plex Mono",ui-monospace,monospace;font-size:12px}
+button{font:inherit;cursor:pointer}
+input,select,textarea{font:inherit;color:var(--ink);background:var(--surface);border:1px solid var(--line);border-radius:6px;padding:8px 10px;width:100%}
+input:focus,select:focus,textarea:focus,button:focus-visible{outline:2px solid var(--accent);outline-offset:1px}
+label{display:block;font-size:12px;font-weight:600;letter-spacing:.04em;text-transform:uppercase;color:var(--ink2);margin-bottom:4px}
+
+/* Top bar */
+.topbar{background:var(--surface);border-bottom:2px solid var(--accent);padding:10px 16px;display:flex;align-items:center;gap:16px;flex-wrap:wrap;position:sticky;top:0;z-index:10}
+.brand{font-family:"Barlow Condensed",sans-serif;font-weight:700;font-size:22px;letter-spacing:.02em}
+.brand span{color:var(--accent)}
+.roles{display:flex;gap:6px;margin-left:auto}
+.roles button{border:1px solid var(--line);background:var(--surface);color:var(--ink);border-radius:20px;padding:6px 14px;font-weight:600}
+.roles button.on{background:var(--ink);color:var(--ground);border-color:var(--ink)}
+
+.wrap{max-width:1100px;margin:0 auto;padding:20px 16px;display:grid;gap:20px}
+.cols{display:grid;grid-template-columns:340px 1fr;gap:20px;align-items:start}
+@media(max-width:840px){.cols{grid-template-columns:1fr}}
+
+.card{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:16px}
+.card h2{font-size:20px;margin-bottom:12px}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.stack{display:grid;gap:10px}
+
+.btn{border:none;border-radius:6px;padding:9px 14px;font-weight:600;background:var(--surface2);color:var(--ink)}
+.btn.primary{background:var(--accent);color:var(--accent-ink)}
+.btn.ghost{background:transparent;border:1px solid var(--line)}
+.btn.big{width:100%;padding:13px;font-size:16px}
+.btn:disabled{opacity:.45;cursor:not-allowed}
+
+/* Job cards */
+.job{background:var(--surface);border:1px solid var(--line);border-left:5px solid var(--stripe,var(--ink2));border-radius:10px;padding:14px 16px;display:grid;gap:8px}
+.job header{display:flex;align-items:baseline;gap:10px;flex-wrap:wrap}
+.job h3{font-size:19px}
+.pill{font-size:12px;font-weight:600;letter-spacing:.03em;padding:2px 10px;border-radius:20px;background:var(--chip-grey);color:var(--ink2);white-space:nowrap}
+.pill.new{background:var(--chip-grey);color:var(--ink)}
+.pill.assigned{background:var(--chip-blue);color:var(--blue)}
+.pill.enroute{background:var(--chip-blue);color:var(--blue)}
+.pill.arrived,.pill.working{background:var(--chip-amber);color:var(--amber)}
+.pill.done{background:var(--chip-green);color:var(--green)}
+.meta{color:var(--ink2);font-size:13px;display:flex;gap:14px;flex-wrap:wrap}
+.links{display:flex;gap:8px;flex-wrap:wrap}
+.links a{color:var(--blue);font-weight:600;text-decoration:none;border:1px solid var(--line);border-radius:6px;padding:5px 10px;font-size:13px}
+.timeline{border-top:1px dashed var(--line);padding-top:8px;display:grid;gap:3px}
+.timeline div{display:flex;gap:10px;font-size:12.5px;color:var(--ink2)}
+.timeline .t{font-family:"IBM Plex Mono",monospace;color:var(--ink2);min-width:96px;font-variant-numeric:tabular-nums}
+
+/* chat */
+.chat{border-top:1px dashed var(--line);padding-top:8px}
+.chat .msgs{max-height:150px;overflow-y:auto;display:grid;gap:4px;margin-bottom:8px}
+.chat .m{font-size:13px}.chat .m b{color:var(--accent)}
+.chat form{display:flex;gap:6px}
+
+.photos{display:flex;gap:8px;flex-wrap:wrap}
+.photos img{width:84px;height:84px;object-fit:cover;border-radius:6px;border:1px solid var(--line)}
+
+.empty{color:var(--ink2);text-align:center;padding:30px 10px;border:1px dashed var(--line);border-radius:10px}
+
+/* review page */
+.review{max-width:520px;margin:40px auto;padding:0 16px}
+.stars{display:flex;gap:6px;font-size:34px}
+.stars button{background:none;border:none;color:var(--line);padding:0}
+.stars button.on{color:var(--amber)}
+.note{font-size:13px;color:var(--ink2)}
+.banner{background:var(--chip-green);color:var(--green);border-radius:8px;padding:12px 16px;font-weight:600}
+.copy{font-size:12px}
+</style>
+</head>
+<body>
+<div id="app"></div>
+<script>
+"use strict";
+const TECHS = [{id:"t1",name:"Tech 1 — Marco"},{id:"t2",name:"Tech 2 — Danny"}];
+const SERVICES = ["Oil change","Brake job","Battery replacement","Engine swap","Diagnostics","Tire change","Other"];
+const STATUSES = ["new","assigned","enroute","arrived","working","done"];
+const STATUS_LABEL = {new:"New",assigned:"Assigned",enroute:"En route",arrived:"On site",working:"Working",done:"Complete"};
+const STRIPE = {new:"var(--ink2)",assigned:"var(--blue)",enroute:"var(--blue)",arrived:"var(--amber)",working:"var(--amber)",done:"var(--green)"};
+
+let db = load();
+function load(){ try{ return JSON.parse(localStorage.getItem("crewdb")||"null") || {jobs:[],seq:1}; }catch(e){ return {jobs:[],seq:1}; } }
+function save(){ try{ localStorage.setItem("crewdb",JSON.stringify(db)); }catch(e){ alert("Storage full — old photos may need clearing."); } }
+function fmt(ts){ const d=new Date(ts); return d.toLocaleDateString([],{month:"short",day:"numeric"})+" "+d.toLocaleTimeString([],{hour:"2-digit",minute:"2-digit"}); }
+function esc(s){ return String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c])); }
+function job(id){ return db.jobs.find(j=>j.id===id); }
+function techName(id){ const t=TECHS.find(t=>t.id===id); return t?t.name:"Unassigned"; }
+function mapsUrl(addr){ return "https://www.google.com/maps/dir/?api=1&destination="+encodeURIComponent(addr); }
+
+let role = localStorage.getItem("crewrole") || "owner";
+function setRole(r){ role=r; localStorage.setItem("crewrole",r); render(); }
+
+function log(j,text,geo){
+  j.events.push({ts:Date.now(),text});
+  if(geo && navigator.geolocation){
+    navigator.geolocation.getCurrentPosition(p=>{
+      j.events.push({ts:Date.now(),text:"GPS check-in: "+p.coords.latitude.toFixed(5)+", "+p.coords.longitude.toFixed(5)});
+      save(); render();
+    },()=>{});
+  }
+}
+function setStatus(id,st,who){
+  const j=job(id); if(!j) return;
+  j.status=st;
+  log(j, STATUS_LABEL[st]+" — "+(who||"Dispatch"), st==="arrived"||st==="done");
+  save(); render();
+}
+
+function createJob(f){
+  const id="J-"+String(db.seq++).padStart(3,"0");
+  const j={id, client:f.client.value.trim(), phone:f.phone.value.trim(), address:f.address.value.trim(),
+    service:f.service.value, notes:f.notes.value.trim(), tech:f.tech.value, priority:f.priority.value,
+    status:f.tech.value?"assigned":"new", created:Date.now(), events:[], chat:[], photos:[], workDesc:"", review:null};
+  j.events.push({ts:Date.now(),text:"Ticket created ("+j.service+")"+(j.tech?" → assigned to "+techName(j.tech):"")});
+  db.jobs.unshift(j); save(); f.reset(); render();
+}
+
+function sendChat(id,from,input){
+  const j=job(id); const text=input.value.trim(); if(!text) return;
+  j.chat.push({ts:Date.now(),from,text}); save(); render();
+}
+
+async function addPhotos(id,files){
+  const j=job(id);
+  for(const file of files){
+    const url=await shrink(file);
+    j.photos.push(url);
+  }
+  save(); render();
+}
+function shrink(file){
+  return new Promise(res=>{
+    const img=new Image();
+    img.onload=()=>{
+      const s=Math.min(1,700/Math.max(img.width,img.height));
+      const c=document.createElement("canvas");
+      c.width=img.width*s; c.height=img.height*s;
+      c.getContext("2d").drawImage(img,0,0,c.width,c.height);
+      res(c.toDataURL("image/jpeg",.7));
+    };
+    img.src=URL.createObjectURL(file);
+  });
+}
+
+function reviewLink(id){ return location.origin+location.pathname+"#review/"+id; }
+function copyLink(id){ navigator.clipboard.writeText(reviewLink(id)).then(()=>alert("Review link copied — text it to the client:\n"+reviewLink(id))); }
+
+/* ---------- rendering ---------- */
+const app=document.getElementById("app");
+function render(){
+  const h=location.hash;
+  if(h.startsWith("#review/")) return renderReview(h.slice(8));
+  app.innerHTML = topbar() + (role==="owner"?ownerView():techView(role));
+  wire();
+}
+
+function topbar(){
+  return `<div class="topbar">
+    <div class="brand">CREW<span>BOARD</span> <span class="note" style="font-family:Barlow;font-weight:400;font-size:12px;color:var(--ink2)">two-man shop dispatch</span></div>
+    <div class="roles">
+      <button data-role="owner" class="${role==="owner"?"on":""}">Dispatch / Owner</button>
+      ${TECHS.map(t=>`<button data-role="${t.id}" class="${role===t.id?"on":""}">${esc(t.name.split("—")[1].trim())}</button>`).join("")}
+    </div>
+  </div>`;
+}
+
+function jobCard(j,forTech){
+  const done=j.status==="done";
+  return `<article class="job" style="--stripe:${STRIPE[j.status]}">
+    <header>
+      <span class="mono">${j.id}</span>
+      <h3>${esc(j.service)} — ${esc(j.client)}</h3>
+      <span class="pill ${j.status}">${STATUS_LABEL[j.status]}</span>
+      ${j.priority==="urgent"?'<span class="pill" style="background:var(--chip-red);color:var(--red)">URGENT</span>':""}
+    </header>
+    <div class="meta">
+      <span>${esc(j.address)}</span>
+      <span>${esc(techName(j.tech))}</span>
+      <span class="mono">${fmt(j.created)}</span>
+    </div>
+    ${j.notes?`<div class="note">${esc(j.notes)}</div>`:""}
+    <div class="links">
+      <a href="${mapsUrl(j.address)}" target="_blank" rel="noopener">🧭 Navigate</a>
+      <a href="tel:${esc(j.phone)}">📞 Call client</a>
+      <a href="sms:${esc(j.phone)}">💬 Text client</a>
+      ${!forTech?`<a href="#review/${j.id}">⭐ Review page</a>`:""}
+    </div>
+
+    ${forTech ? techActions(j) : ownerActions(j)}
+
+    ${j.photos.length?`<div class="photos">${j.photos.map(p=>`<img src="${p}" alt="job photo">`).join("")}</div>`:""}
+    ${j.workDesc?`<div class="note"><b>Work summary:</b> ${esc(j.workDesc)}</div>`:""}
+    ${j.review?`<div class="banner">Client review: ${"★".repeat(j.review.stars)}${"☆".repeat(5-j.review.stars)} — “${esc(j.review.text)}”${j.review.followup?`<br>Still needs: ${esc(j.review.followup)}`:""}</div>`:""}
+
+    <div class="chat">
+      <div class="msgs">${j.chat.map(m=>`<div class="m"><b>${esc(m.from)}</b> <span class="mono">${fmt(m.ts)}</span><br>${esc(m.text)}</div>`).join("")||'<div class="note">No crew messages yet.</div>'}</div>
+      <form data-chat="${j.id}"><input placeholder="Message the crew…" aria-label="crew message"><button class="btn">Send</button></form>
+    </div>
+
+    <details><summary class="note" style="cursor:pointer">Timeline (${j.events.length})</summary>
+      <div class="timeline">${j.events.map(e=>`<div><span class="t">${fmt(e.ts)}</span><span>${esc(e.text)}</span></div>`).join("")}</div>
+    </details>
+    ${done&&!forTech?`<button class="btn ghost copy" data-copylink="${j.id}">Copy client review link</button>`:""}
+  </article>`;
+}
+
+function ownerActions(j){
+  if(j.status==="done") return "";
+  return `<div class="links" style="align-items:center">
+    <select data-assign="${j.id}" style="width:auto">
+      <option value="">Reassign…</option>
+      ${TECHS.map(t=>`<option value="${t.id}" ${j.tech===t.id?"selected":""}>${esc(t.name)}</option>`).join("")}
+    </select>
+  </div>`;
+}
+
+function techActions(j){
+  const b=(st,label,cls)=>`<button class="btn big ${cls||""}" data-status="${j.id}|${st}">${label}</button>`;
+  if(j.status==="assigned") return b("enroute","🚗 On my way","primary");
+  if(j.status==="enroute") return b("arrived","📍 I've arrived","primary");
+  if(j.status==="arrived") return b("working","🔧 Start job","primary");
+  if(j.status==="working") return `
+    <div class="stack">
+      <div><label>Photos of finished work (required)</label><input type="file" accept="image/*" multiple data-photos="${j.id}"></div>
+      <div><label>Quick description of what was done (required)</label><textarea rows="2" data-desc="${j.id}">${esc(j.workDesc)}</textarea></div>
+      <button class="btn big primary" data-complete="${j.id}">✅ Complete job</button>
+      <div class="note">Completing sends the client their review link automatically (prototype: link is generated and shown).</div>
+    </div>`;
+  return "";
+}
+
+function ownerView(){
+  const active=db.jobs.filter(j=>j.status!=="done"), done=db.jobs.filter(j=>j.status==="done");
+  return `<div class="wrap"><div class="cols">
+    <div class="card">
+      <h2>New job ticket</h2>
+      <form id="newjob" class="stack">
+        <div><label>Client name</label><input name="client" required></div>
+        <div class="grid2">
+          <div><label>Phone</label><input name="phone" type="tel" required></div>
+          <div><label>Priority</label><select name="priority"><option value="normal">Normal</option><option value="urgent">Urgent</option></select></div>
+        </div>
+        <div><label>Address</label><input name="address" required placeholder="123 Main St, City"></div>
+        <div class="grid2">
+          <div><label>Service</label><select name="service">${SERVICES.map(s=>`<option>${s}</option>`).join("")}</select></div>
+          <div><label>Assign to</label><select name="tech"><option value="">— later —</option>${TECHS.map(t=>`<option value="${t.id}">${esc(t.name)}</option>`).join("")}</select></div>
+        </div>
+        <div><label>Notes</label><textarea name="notes" rows="2" placeholder="What the client described…"></textarea></div>
+        <button class="btn primary big">Raise ticket</button>
+      </form>
+    </div>
+    <div class="stack">
+      <h2 style="font-size:22px">Job board <span class="note">(${active.length} active)</span></h2>
+      ${active.map(j=>jobCard(j,false)).join("")||'<div class="empty">No active jobs. Raise a ticket to get the crew moving.</div>'}
+      ${done.length?`<h2 style="font-size:22px">Completed</h2>${done.map(j=>jobCard(j,false)).join("")}`:""}
+    </div>
+  </div></div>`;
+}
+
+function techView(tid){
+  const mine=db.jobs.filter(j=>j.tech===tid&&j.status!=="done"), done=db.jobs.filter(j=>j.tech===tid&&j.status==="done");
+  return `<div class="wrap" style="max-width:640px">
+    <h2 style="font-size:24px">${esc(techName(tid))} — my jobs</h2>
+    ${mine.map(j=>jobCard(j,true)).join("")||'<div class="empty">Nothing assigned right now. Enjoy the coffee. ☕</div>'}
+    ${done.length?`<h2 style="font-size:20px">Done today</h2>${done.map(j=>jobCard(j,true)).join("")}`:""}
+  </div>`;
+}
+
+function renderReview(id){
+  const j=job(id);
+  if(!j){ app.innerHTML=`<div class="review card"><h2>Job not found</h2><p class="note">This review link isn't valid on this device (prototype stores data locally).</p></div>`; return; }
+  if(j.review){ app.innerHTML=`<div class="review card"><h2>Thanks, ${esc(j.client)}!</h2><div class="banner">Your review was sent to the shop.</div><p style="margin-top:10px"><a href="#" onclick="location.hash='';return false">← back</a></p></div>`; return; }
+  let stars=0;
+  app.innerHTML=`<div class="review card">
+    <h2>How did we do?</h2>
+    <p class="note">${esc(j.service)} at ${esc(j.address)} — ${esc(techName(j.tech))}</p>
+    <div class="stack" style="margin-top:12px">
+      <div class="stars" id="stars">${[1,2,3,4,5].map(n=>`<button data-star="${n}" aria-label="${n} stars">★</button>`).join("")}</div>
+      <div><label>What happened?</label><textarea id="rtext" rows="3" placeholder="Tell us how the job went…"></textarea></div>
+      <div><label>Anything the technician didn't get to?</label><textarea id="rfollow" rows="2" placeholder="Optional"></textarea></div>
+      <button class="btn primary big" id="rsend">Send review</button>
+    </div>
+  </div>`;
+  document.querySelectorAll("[data-star]").forEach(b=>b.onclick=()=>{
+    stars=+b.dataset.star;
+    document.querySelectorAll("[data-star]").forEach(x=>x.classList.toggle("on",+x.dataset.star<=stars));
+  });
+  document.getElementById("rsend").onclick=()=>{
+    if(!stars) return alert("Tap a star rating first.");
+    j.review={stars,text:document.getElementById("rtext").value.trim(),followup:document.getElementById("rfollow").value.trim(),ts:Date.now()};
+    log(j,"Client review received: "+stars+"★");
+    if(j.review.followup) log(j,"Follow-up requested: "+j.review.followup);
+    save(); renderReview(id);
+  };
+}
+
+function wire(){
+  document.querySelectorAll("[data-role]").forEach(b=>b.onclick=()=>setRole(b.dataset.role));
+  const nf=document.getElementById("newjob");
+  if(nf) nf.onsubmit=e=>{e.preventDefault();createJob(nf);};
+  document.querySelectorAll("[data-assign]").forEach(s=>s.onchange=()=>{
+    const j=job(s.dataset.assign); if(!s.value) return;
+    j.tech=s.value; if(j.status==="new") j.status="assigned";
+    log(j,"Assigned to "+techName(s.value)); save(); render();
+  });
+  document.querySelectorAll("[data-status]").forEach(b=>b.onclick=()=>{
+    const [id,st]=b.dataset.status.split("|");
+    setStatus(id,st,techName(role));
+  });
+  document.querySelectorAll("[data-photos]").forEach(i=>i.onchange=()=>addPhotos(i.dataset.photos,i.files));
+  document.querySelectorAll("[data-desc]").forEach(t=>t.onchange=()=>{ job(t.dataset.desc).workDesc=t.value.trim(); save(); });
+  document.querySelectorAll("[data-complete]").forEach(b=>b.onclick=()=>{
+    const j=job(b.dataset.complete);
+    if(!j.photos.length) return alert("Upload at least one photo of the finished work before completing.");
+    if(!j.workDesc) return alert("Add a quick description of what was done.");
+    setStatus(j.id,"done",techName(role));
+    log(j,"Review link sent to client: "+reviewLink(j.id)); save(); render();
+  });
+  document.querySelectorAll("[data-chat]").forEach(f=>f.onsubmit=e=>{
+    e.preventDefault();
+    sendChat(f.dataset.chat, role==="owner"?"Dispatch":techName(role).split("—")[1].trim(), f.querySelector("input"));
+  });
+  document.querySelectorAll("[data-copylink]").forEach(b=>b.onclick=()=>copyLink(b.dataset.copylink));
+}
+
+window.addEventListener("hashchange",render);
+window.addEventListener("storage",()=>{db=load();render();}); // live-sync across open tabs (dispatch + tech)
+render();
+</script>
+</body>
+</html>
